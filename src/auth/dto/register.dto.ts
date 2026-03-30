@@ -1,5 +1,6 @@
 import { Transform } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength, IsEnum, IsOptional } from "class-validator";
+import { UserRole } from '../schema/user.schema';
 
 export class RegisterDto {
   @IsEmail({}, { message: 'Please provide a valid email address' })
@@ -10,7 +11,6 @@ export class RegisterDto {
 
   @IsString({ message: 'Password must be a string' })
   @IsNotEmpty({ message: 'Password is required' })
-  
   password: string;
 
   @IsString({ message: 'First name must be a string' })
@@ -26,4 +26,8 @@ export class RegisterDto {
   @MaxLength(50, { message: 'Last name cannot exceed 50 characters' })
   @Transform(({ value }) => value?.trim())
   lastName: string;
+
+  @IsEnum(UserRole, { message: 'Role must be buyer or seller' })
+  @IsOptional()
+  role?: UserRole;
 }
