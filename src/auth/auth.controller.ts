@@ -1,6 +1,7 @@
-import { Body, ConflictException, Controller, HttpStatus, Post, UnauthorizedException } from '@nestjs/common';
+import { Body, ConflictException, Controller, HttpStatus, Post, UnauthorizedException, Get, Req, Headers, UseGuards, InternalServerErrorException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { JwtAuthGuard } from '../guards/JwtGuards';
 
 @Controller('api/v1')
 export class AuthController {
@@ -16,6 +17,9 @@ export class AuthController {
         data: {
           id:user._id,
           email:user.email,
+          firstName:user.firstName,
+          lastName:user.lastName,
+          role:user.role
         },
         statusCode:HttpStatus.CREATED
       };
@@ -37,11 +41,59 @@ export class AuthController {
         data: {
           email: user.user.email,
           access_token: user.access_token,
+          userId:user.user.id,
+          firstName:user.user.firstName,
+          lastName:user.user.lastName,
+          role:user.user.role
         },
         statusCode: HttpStatus.OK
       };
     } catch (error) {
        throw new UnauthorizedException('Invalid credentials');
+    }
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req) {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      const userId = req.user?.sub || req.user?.id;
+      
+      console.log('Logout attempt - Token:', token ? 'Present' : 'Missing');
+      console.log('Logout attempt - User ID:', userId);
+      console.log('Logout attempt - Full user object:', req.user);
+      
+      if (!token || !userId) {
+        throw new UnauthorizedException('Invalid logout request: missing token or user ID');
+      }
+
+      const result = await this.authService.logout(userId, token);
+      return {
+        success: true,
+        message: result.message,
+        statusCode: result.statusCode
+      };
+    } catch (error) {
+      console.error('Logout error:', error);
+      throw new UnauthorizedException(error.message || 'Logout failed');
+    }
+  }
+
+  @Get('user')
+  @UseGuards(JwtAuthGuard)
+  async getCurrentUser(@Req() req) {
+    try {
+      const userId = req.user?.sub || req.user?.id;
+      const user = await this.authService.getCurrentUser(userId);
+      return {
+        success: true,
+        message: 'User retrieved successfully',
+        data: user,
+        statusCode: HttpStatus.OK
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve user');
     }
   }
 }

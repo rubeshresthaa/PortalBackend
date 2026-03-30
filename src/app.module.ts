@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { FavouriteModule } from './favourite/favourite.module';
+import { PropertyModule } from './property/property.module';
 
 @Module({
   imports: [ConfigModule.forRoot({
@@ -18,7 +19,8 @@ MongooseModule.forRootAsync({
   }),
 }),
 AuthModule,
-FavouriteModule],
+FavouriteModule,
+PropertyModule],
   controllers: [AppController],
   providers: [AppService],
 })

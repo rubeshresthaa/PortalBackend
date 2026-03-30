@@ -5,10 +5,18 @@ import { User, UserSchema } from './schema/user.schema';
 import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtStrategy } from './jwt.strategy';
+import { PassportModule } from '@nestjs/passport';
+import { TokenBlacklistService } from './token-blacklist.service';
+import { BlacklistedToken, BlacklistedTokenSchema } from './schema/blacklisted-token.schema';
 
 @Module({
   imports:[
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    PassportModule,
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: BlacklistedToken.name, schema: BlacklistedTokenSchema }
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -16,13 +24,14 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         return {
           secret: configService.get('JWT_SECRET'),
           signOptions: {
-            expiresIn: configService.get('1hr'),
+            expiresIn: '1h',
           },
         };
       },
     }),
   ],
-  providers: [AuthService],
-  controllers: [AuthController]
+  providers: [AuthService, JwtStrategy, TokenBlacklistService],
+  controllers: [AuthController],
+  exports: [AuthService, JwtModule, TokenBlacklistService]
 })
 export class AuthModule {}
