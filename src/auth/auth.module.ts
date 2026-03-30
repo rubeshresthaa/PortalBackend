@@ -9,6 +9,7 @@ import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
 import { TokenBlacklistService } from './token-blacklist.service';
 import { BlacklistedToken, BlacklistedTokenSchema } from './schema/blacklisted-token.schema';
+import { RolesGuard } from '../guards/RolesGuard';
 
 @Module({
   imports:[
@@ -30,7 +31,7 @@ import { BlacklistedToken, BlacklistedTokenSchema } from './schema/blacklisted-t
       },
     }),
   ],
-  providers: [AuthService, JwtStrategy, TokenBlacklistService],
+  providers: [AuthService, JwtStrategy, TokenBlacklistService, RolesGuard],
   controllers: [AuthController],
   exports: [AuthService, JwtModule, TokenBlacklistService]
 })

@@ -59,10 +59,7 @@ export class AuthController {
     try {
       const token = req.headers.authorization?.replace('Bearer ', '');
       const userId = req.user?.sub || req.user?.id;
-      
-      console.log('Logout attempt - Token:', token ? 'Present' : 'Missing');
-      console.log('Logout attempt - User ID:', userId);
-      console.log('Logout attempt - Full user object:', req.user);
+
       
       if (!token || !userId) {
         throw new UnauthorizedException('Invalid logout request: missing token or user ID');

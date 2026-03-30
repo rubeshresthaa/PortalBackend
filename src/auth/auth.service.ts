@@ -1,7 +1,7 @@
 import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from './schema/user.schema';
+import { User, UserDocument, UserRole } from './schema/user.schema';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -27,8 +27,8 @@ export class AuthService {
       email:registerDto.email,
       password:hash,
       firstName:registerDto.firstName,
-      lastName:registerDto.lastName
-      
+      lastName:registerDto.lastName,
+      role: registerDto.role || UserRole.BUYER // Default to buyer if not specified
     });
     return user;
   }
