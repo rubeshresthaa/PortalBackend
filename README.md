@@ -16,21 +16,21 @@
 ### 1. Start the Backend
 Navigate to your backend directory:
 ```bash
-cd backend/backend
 npm install
 # Make sure your .env has MONGO_URI setup and JWT_SECRET in backend env file
 npm run start:dev
 ```
-The backend starts on **http://localhost:3001** and allows CORS from `http://localhost:3000` (or your frontend url).
+The backend starts on **http://localhost:3001**, **https://portal-backend-xi.vercel.app** and allows CORS from `http://localhost:3000`, `https://portal-frontend-red.vercel.app` (or your frontend url).
 
 ### 2. Start the Frontend
 In a separate terminal, navigate to the frontend folder:
 ```bash
-cd frontend
+
 npm install
 npm run dev
 ```
 The application will be running locally (`3000`).
+f
 
 ---
 
