@@ -5,8 +5,9 @@ export type PropertyDocument = Property & Document;
 
 @Schema({ timestamps: true })
 export class Property {
-  @Prop({ type: String, required: true, default: () => new Types.ObjectId().toString() })
-  _id: string; // Manually assignable or auto-generated string ID
+
+  @Prop({ required: true })
+  userId: string;
 
   @Prop({ required: true })
   propertyTitle: string;

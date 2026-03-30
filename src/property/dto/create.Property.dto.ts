@@ -1,9 +1,6 @@
 import { IsNumber, IsOptional, IsString, IsNotEmpty } from 'class-validator';
 
 export class AddPropertyDto {
-  @IsString()
-  @IsOptional()
-  _id?: string;
 
   @IsString()
   @IsNotEmpty()

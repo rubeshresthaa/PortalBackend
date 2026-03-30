@@ -5,13 +5,15 @@ import { User, UserDocument } from './schema/user.schema';
 import { RegisterDto } from './dto/register.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dto/login.dto';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectModel(User.name) private userModel: Model<UserDocument>, private jwtService: JwtService
+    @InjectModel(User.name) private userModel: Model<UserDocument>, 
+    private jwtService: JwtService,
+    private tokenBlacklistService: TokenBlacklistService
   ){}
 
   async registerUser(registerDto: RegisterDto) {
@@ -26,6 +28,7 @@ export class AuthService {
       password:hash,
       firstName:registerDto.firstName,
       lastName:registerDto.lastName
+      
     });
     return user;
   }
@@ -56,14 +59,37 @@ export class AuthService {
     }
   }
 
-  async logout(userId:string):Promise<{message:string,statusCode:number}>{
-    await this.userModel.updateOne(
-      { _id: userId },
-      { lastLogout: new Date() }
-    );
-    return { message: 'Logout successful',statusCode:200 };
+  async logout(userId: string, token: string): Promise<{message: string, statusCode: number}> {
+    if (!userId || !token) {
+      throw new ConflictException('User ID and token are required for logout');
+    }
+
+    try {
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        throw new ConflictException('User not found');
+      }
+
+      // Add token to blacklist
+      await this.tokenBlacklistService.addToBlacklist(token, userId);
+      
+      // Update last logout time
+      await this.userModel.updateOne(
+        { _id: userId },
+        { lastLogout: new Date() }
+      );
+      
+      return { message: 'Logout successful', statusCode: 200 };
+    } catch (error) {
+      throw new ConflictException('Logout failed');
+    }
   }
 
+  async getCurrentUser(userId: string) {
+    const user = await this.userModel.findById(userId).select('-password');
+    return user;
+  }
+  
   async getAllUsers(){
     return this.userModel.find().select('-password');
   }

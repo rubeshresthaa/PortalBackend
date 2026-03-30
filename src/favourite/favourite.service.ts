@@ -1,69 +1,37 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Favourite, FavouriteDocument } from './schema/favourite.schema';
-import { Property, PropertyDocument } from '../property/schema/property.schema';
-
 @Injectable()
 export class FavouriteService {
-  constructor(
-    @InjectModel(Favourite.name) private favouriteModel: Model<FavouriteDocument>,
-    @InjectModel(Property.name) private propertyModel: Model<PropertyDocument>
-  ) {}
+  constructor(@InjectModel(Favourite.name) private favouriteModel: Model<FavouriteDocument>) {}
 
   async getMyFavourites(userId: string) {
-    const favList = await this.favouriteModel
+    const list = await this.favouriteModel
       .find({ userId })
-      .sort({ createdAt: -1 })
-      .lean();
+      .populate('propertyId')
+      .sort({ createdAt: -1 });
 
- 
-
-    const properties = await Promise.all(
-      favList.map(async (fav) => {
-        if (!fav.propertyId) return null;
-        try {
-          let query: any = { _id: fav.propertyId };
-          if (/^[0-9a-fA-F]{24}$/.test(fav.propertyId)) {
-            query = { $or: [{ _id: fav.propertyId }, { _id: new (require('mongoose').Types.ObjectId)(fav.propertyId) }] };
-          }
-          const property = await this.propertyModel.collection.findOne(query);
-          return property || null;
-        } catch {
-          return null;
-        }
-      })
-    );
-
-    const filtered = properties.filter(Boolean);
-  
-    return filtered;
+    // Return only records where the property still exists
+    return list
+      .filter(fav => fav.propertyId)
+      .map(fav => fav.propertyId); // Return the populated property objects directly
   }
-
+  
   async toggleFavourite(userId: string, propertyId: string) {
-
     if (!propertyId || propertyId.trim() === '') {
       throw new BadRequestException('propertyId is required');
     }
 
-    // Verify the property actually exists
-    let query: any = { _id: propertyId };
-    if (/^[0-9a-fA-F]{24}$/.test(propertyId)) {
-      query = { $or: [{ _id: propertyId }, { _id: new (require('mongoose').Types.ObjectId)(propertyId) }] };
-    }
-    const property = await this.propertyModel.collection.findOne(query);
-
-    if (!property) {
-      throw new NotFoundException(`Property with id "${propertyId}" not found`);
-    }
     const existing = await this.favouriteModel.findOne({ userId, propertyId });
-
     if (existing) {
       await this.favouriteModel.deleteOne({ userId, propertyId });
       return { isFavourited: false, data: null };
     } else {
-      await this.favouriteModel.create({ userId, propertyId });
-      return { isFavourited: true, data: property };
+      const created = await this.favouriteModel.create({ userId, propertyId });
+      const populated = await created.populate('propertyId');
+      return { isFavourited: true, data: populated.propertyId }; 
     }
   }
 }
+
