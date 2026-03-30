@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  ExecutionContext,
-} from '@nestjs/common';
+import { Injectable, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
 

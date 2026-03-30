@@ -37,6 +37,7 @@ export class AuthController {
         data: {
           email: user.user.email,
           access_token: user.access_token,
+          userId:user.user.id
         },
         statusCode: HttpStatus.OK
       };
